@@ -3,6 +3,7 @@ require('dotenv').config(); // unlock the .env contents
 const express = require('express');
 const mongoose = require('mongoose'); 
 const cors = require('cors');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express(); // created the server app
 
@@ -19,9 +20,10 @@ app.get('/api/test', (req, res) => {
     res.json({ message: "The backend is alive" });
 });
 
+app.use('/api/auth', authRoutes);
+
 // Start the server code
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    
     console.log(` Server is running on port ${PORT}`); 
 });

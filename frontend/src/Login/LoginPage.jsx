@@ -9,8 +9,7 @@ const handleAnimationComplete = () => {
 export default function Landingpage() {
   const navigate = useNavigate();
 
-  const [selectedRole, setSelectedRole] = useState("");
-
+  // 1. Removed selectedRole state, keeping only the form data
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -18,60 +17,17 @@ export default function Landingpage() {
 
   const [error, setError] = useState("");
 
-  const roleCredentials = {
-    manager: {
-      username: "manager",
-      password: "manager123",
-      route: "/dashboard",
-    },
-
-    frontoffice: {
-      username: "frontoffice",
-      password: "fo123",
-      route: "/admission",
-    },
-
-    seniordoctor: {
-      username: "seniordoctor",
-      password: "sd123",
-      route: "/senior-doctor",
-    },
-
-    juniordoctor: {
-      username: "juniordoctor",
-      password: "jd123",
-      route: "/junior-doctor",
-    },
-
-    nurse: {
-      username: "nurse",
-      password: "nurse123",
-      route: "/nurse",
-    },
-
-    pharmacist: {
-      username: "pharmacist",
-      password: "pharma123",
-      route: "/pharmacist",
-    },
-  };
-
-  const handleRoleChange = (e) => {
-    const role = e.target.value;
-
-    setSelectedRole(role);
-
-    if (roleCredentials[role]) {
-      setFormData({
-        username: roleCredentials[role].username,
-        password: roleCredentials[role].password,
-      });
-    } else {
-      setFormData({
-        username: "",
-        password: "",
-      });
-    }
+  // 2. Replaced the full mock credentials with just a simple route map.
+  // We need this so React knows which page to open when the backend replies.
+  const roleRoutes = {
+    manager: "/dashboard",
+    frontoffice: "/admission",
+    seniordoctor: "/senior-doctor",
+    juniordoctor: "/junior-doctor",
+    nurse: "/nurse",
+    pharmacist: "/pharmacist",
+    labtechnician: "/lab", 
+    receptionist: "/reception"
   };
 
   const handleChange = (e) => {
@@ -81,31 +37,56 @@ export default function Landingpage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // 3. Updated handleSubmit to be async and talk to the backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedRole) {
-      setError("Please select a role");
+    if (!formData.username || !formData.password) {
+      setError("Please enter both username and password");
       return;
     }
 
-    const role = roleCredentials[selectedRole];
+    try {
+      // Send data to your Node.js server
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
+      });
 
-    if (
-      formData.username === role.username &&
-      formData.password === role.password
-    ) {
+      const data = await response.json();
+
+      // If backend returns an error (400, 401, 500)
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid username or password");
+      }
+
+      // Success! Clear errors
       setError("");
 
-      // SAVE ROLE FOR LAYOUT
-      localStorage.setItem("role", selectedRole);
+      // Save the secure token and the role to local storage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
 
-      navigate(role.route);
-    } else {
-      setError("Invalid username or password");
+      // Look up the correct route for this role and navigate
+      const route = roleRoutes[data.role];
+      if (route) {
+        navigate(route);
+      } else {
+        setError("Role route not configured in frontend.");
+      }
+
+    } catch (err) {
+      setError(err.message);
     }
   };
 
+  // 4. The JSX below is EXACTLY as you provided it. No frontend changes made.
   return (
     <section className="h-screen w-full flex items-center justify-end pr-8 lg:pr-24 bg-[url('/loginbg.png')] bg-cover bg-center bg-no-repeat">
       <div className="w-full max-w-[500px] bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-10 mx-4">

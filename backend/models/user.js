@@ -1,4 +1,4 @@
-const mongoose = import("mongoose");
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
     fullname:{
@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
     },
     role:{
         type: String,
-      enum: ['manager', 'frontoffice', 'seniordoctor', 'juniordoctor', 'nurse', 'pharmacist', 'labtechnician', 'receptionist'],
+        enum: ['manager', 'frontoffice', 'seniordoctor', 'juniordoctor', 'nurse', 'pharmacist', 'labtechnician', 'receptionist'],
         required: true
     },
     address:{
